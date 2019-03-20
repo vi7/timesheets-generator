@@ -1,32 +1,18 @@
 #!/usr/bin/env python
 
 import random
-import operator
 
-ops = {'+': operator.add,
-       '-': operator.sub}
+start_time_default = 540 # 9:00 (9 h since 0:00)
+start_min_deviation = -5 # -15 min
+start_max_deviation = 15 # +15 min
+days = 20 # days per month
+day_time_default = 480 # 8 h
+day_min_deviation = -60 # -1 h
+day_max_deviation = 60 # +1 h
 
-default_start_time = 540 # 9:00
-default_end_time = 1020 # 17:00
-start_time_deviation = 40 # -10 - +30 min
-end_time_deviation = 80 # -10 - +70 min
-goal_month_time = 9600 # 160 hour / month
-
-report = {}
-report_start_time_key = 'start_time'
-report_end_time_key = 'end_time'
-
-# tech statistics
-iterations_num = 0
-
-def timeRandomizer(default_time, deviation):
-  deviation_rand = random.randint(0,deviation)
-  if deviation_rand <= 10:
-    op = random.choice(list(ops.keys()))
-    time = ops.get(op)(default_time,deviation_rand)
-  else:
-    time = default_time + deviation_rand
-
+def timeRandomizer(default_time, min_deviation, max_deviation, deviation_step=5):
+  deviation_rand = random.randrange(min_deviation, max_deviation, deviation_step)
+  time = default_time + deviation_rand
   return time
 
 ########
@@ -34,48 +20,32 @@ def timeRandomizer(default_time, deviation):
 ########
 
 if __name__ == '__main__':
-  
-  while True:
 
-    total_month_time = 0
-    text_report = ''
+  days_step = 2
+  day_times = []
+  times = []
 
-    # create report
-    for x in range(1,21):
-      start_time = timeRandomizer(default_start_time,start_time_deviation)
-      # print 'Start time is: {}'.format(start_time)
+  # work hours per day generator
+  for i in range(0, days, days_step):
+    day_time = timeRandomizer(day_time_default, day_min_deviation, day_max_deviation)
+    day_times.append(day_time)
+    next_day_time = day_time_default + (day_time_default - day_time)
+    day_times.append(next_day_time)
 
-      end_time = timeRandomizer(default_end_time,end_time_deviation)
-      # print 'End time is: {}'.format(end_time)
+  random.shuffle(day_times)
 
-      report[x] = {report_start_time_key:start_time, report_end_time_key:end_time}
+  # work start and end hours generator
+  for i in range(days):
+    start_time = timeRandomizer(start_time_default, start_min_deviation, start_max_deviation)
+    end_time = start_time + day_times[i]
+    start_hour, start_min = divmod(start_time, 60)
+    end_hour, end_min = divmod(end_time, 60)
+    time_str = str(start_hour) + ':' + str(start_min).zfill(2) + '\t' + str(end_hour) + ':' + str(end_min).zfill(2)
+    times.append(time_str)
 
-    # parse report
-    for day_num, times in report.items():
-      text_report += '\nDay ' + str(day_num) + '\n'
-      day_total_time = times[report_end_time_key] - times[report_start_time_key]
-      text_report += report_start_time_key + ' ' + str(times[report_start_time_key]) + '\n'
-      text_report += report_end_time_key + ' ' + str(times[report_end_time_key]) + '\n'
-      text_report += 'Total day time: ' + str(day_total_time) + '\n'
-      total_month_time += day_total_time
+  print '{}'.format('\n'.join(times))
 
-      if total_month_time > goal_month_time:
-        break
-
-    iterations_num += 1
-
-    if total_month_time == goal_month_time:
-      break
-    else:
-      continue
-
-  # print 'Total month time is {}'.format(total_month_time)
-  print '\n==================\n'
-  print 'Report for a month {}'.format(text_report)
-  print '\nGenerated after {} iterations'.format(iterations_num)
-
-  # for day_num, times in report.items():
-  #   print '\nDay {}'.format(day_num)
-
+  # with open('karta_czasu.tsv', 'w') as filehandle:  
   #   for time in times:
-  #     print '{} is {}'.format(time, times[time])
+  #       filehandle.write('%s\n' % time)
+    

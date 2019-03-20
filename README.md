@@ -40,7 +40,6 @@ Configuration
 
 The following vars in the head of the script code can alter its behaviour:
 - `start_time_default` - work day start time - minutes since 0:00
-- `end_time_default` - work day end time - minutes since 0:00
 - `start_min_deviation` - the earliest possible time you come to work - amount of minutes before `start_time_default`, negative number
 - `start_max_deviation` - the latest possible time you come to work - amount of minutes since `start_time_default`
 - `days` - amount of work days in the month
